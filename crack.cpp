@@ -197,17 +197,23 @@ void update_constant(unsigned char *buf)
         BYTES_SUM += buf[i];
     }
 }
-
-void crack_range(int64_t *start, int64_t *end)
-{
-    *start = dict[0] * HALF_INPUT_LEN;
-    *end = BYTES_SUM - (dict[0] * (INPUT_LEN - HALF_INPUT_LEN));
-    printf("%lld, %lld\n", *start, *end);
-}
 */
 
+void crack_range(int id, int node_num, int64_t *start, int64_t *end)
+{
+	int64_t global_range_start, global_range_end;
+	global_range_start = dict[0] * HALF_INPUT_LEN;
+	global_range_end = BYTES_SUM - (dict[0] * (INPUT_LEN - HALF_INPUT_LEN));
 
-void crack()
+	//printf("%lld %lld len:%d half_len:%d\n", global_range_start, global_range_end, INPUT_LEN, HALF_INPUT_LEN);
+	*start = (id * (global_range_end - global_range_start + 1)) / node_num + global_range_start;
+	*end = ((id + 1) * (global_range_end - global_range_start + 1)) / node_num - 1 + global_range_start;
+
+	printf("Node:%d\tstart:%lld end:%lld\n", id, *start, *end);
+}
+
+
+void crack(int64_t start, int64_t end)
 {
     int ret;
     double time_start, time_end;
@@ -222,7 +228,6 @@ void crack()
 
     memset(key, 0, sizeof key);
 
-
 //    omp_set_num_threads(omp_get_num_procs() * 2);
     
 #pragma omp parallel
@@ -234,6 +239,7 @@ void crack()
     for (int64_t i = start; i <= end; i++)
     {
         printf("Search: %lld + %lld\n", i, BYTES_SUM - i);
+	fflush(stdout);
         forward_dfs(0, i, 0);
 
         ret = reverse_dfs(INPUT_LEN - 1, BYTES_SUM - i, DST_VALUE);

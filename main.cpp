@@ -9,9 +9,9 @@
 
 
 
-uint64_t DST_VALUE = 0x15ad90b88aba1847;
-int INPUT_LEN = 6;
-int HALF_INPUT_LEN = INPUT_LEN / 2;
+uint64_t DST_VALUE;
+int INPUT_LEN;
+int HALF_INPUT_LEN;
 
 int64_t BYTES_SUM; 
 
@@ -41,7 +41,10 @@ void update_constant(unsigned char *buf)
 void update_constant(char *argv[])
 {
 	sscanf(argv[1], "%d", &DST_VALUE);
-	sscanf(argv[2], "%d", &INPUT_LEN);
+	sscanf(argv[2], "%d", &BYTES_SUM);
+	sscanf(argv[3], "%d", &INPUT_LEN);
+
+	HALF_INPUT_LEN = INPUT_LEN / 2;
 }
 
 int main(int argc, char *argv[])
@@ -49,7 +52,7 @@ int main(int argc, char *argv[])
 	int id, num;
 	int64_t crack_start, crack_end;
 
-	if (argc < 3)
+	if (argc < 4)
 	{
 		return 0;	
 	}
@@ -59,7 +62,8 @@ int main(int argc, char *argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
 	MPI_Comm_size(MPI_COMM_WORLD, &num);
 	
-	crack(0, 291);
+	crack_range(id, num, &crack_start, &crack_end);
+	crack(crack_start, crack_end);
 
 	printf("Node %d is done\n", id);
 	fflush(stdout);
