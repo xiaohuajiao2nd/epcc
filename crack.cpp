@@ -1,5 +1,6 @@
 #include <string.h>
 #include <omp.h>
+#include <mpi.h>
 
 #include "crack.h"
 #include "hash_table.h"
@@ -12,12 +13,14 @@ const int RET_NO_FOUND = 0;
 const int RET_FOUND = 1;
 
 const int DICT_SIZE = 62;
-const unsigned char dict[63] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+ const unsigned char dict[63] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 uint64_t lookup_table[256] = {0};
 
 unsigned char key[14];
+#ifdef HOMP
 #pragma omp threadprivate(key)
+#endif
 
 extern uint64_t DST_VALUE;
 extern uint64_t HALF_DEPTH;
@@ -209,17 +212,18 @@ void crack_range(int id, int node_num, int64_t *start, int64_t *end)
 	*start = (id * (global_range_end - global_range_start + 1)) / node_num + global_range_start;
 	*end = ((id + 1) * (global_range_end - global_range_start + 1)) / node_num - 1 + global_range_start;
 
-	printf("Node:%d\tstart:%lld end:%lld\n", id, *start, *end);
+	//printf("Node:%d\tstart:%lld end:%lld\n", id, *start, *end);
 }
 
 
-void crack(int64_t start, int64_t end)
+void crack(int id, int64_t start, int64_t end)
 {
     int ret;
-    double time_start, time_end;
+    //double time_start, time_end;
     bool found = false;
+	int64_t i;
 
-    time_start = omp_get_wtime();
+    //time_start = omp_get_wtime();
 
     init_crc64_table();
     init_lookup_table();
@@ -230,35 +234,47 @@ void crack(int64_t start, int64_t end)
 
 //    omp_set_num_threads(omp_get_num_procs() * 2);
     
+	//printf("[Node %d start-end] %lld ~ %lld\n", id, start, end);
+#ifdef HOMP
 #pragma omp parallel
+#endif
     {
         crc_list = new Node*[HASH_TABLE_SIZE];
     }
 
-#pragma omp parallel for private(ret)
-    for (int64_t i = start; i <= end; i++)
+#ifdef HOMP
+#pragma omp parallel for private(i, ret)
+#endif
+    for (i = start; i <= end; i++)
     {
-        printf("Search: %lld + %lld\n", i, BYTES_SUM - i);
+ //       printf("Search: %lld + %lld\n", i, BYTES_SUM - i);
 	fflush(stdout);
         forward_dfs(0, i, 0);
 
         ret = reverse_dfs(INPUT_LEN - 1, BYTES_SUM - i, DST_VALUE);
 
-    //    printf("hash table size: %llu\n", count_element());
 //        clear();
         if (ret == RET_FOUND)
+	{
             found = true;
-        if (found)
-            i = BYTES_SUM;
+#ifdef HMPI
+		MPI_Bcast(&found, 1, MPI_CHAR, id, MPI_COMM_WORLD);
+#endif
+	    //printf("[Node %d endindex]: %lld/%lld\n", id, i, end);
+	}
+	if (found)
+		i = BYTES_SUM;
     }
 
     /*
+#ifdef HOMP
 #pragma omp parallel
+#endif
     {
         clear();
     }
     */
-    time_end = omp_get_wtime();
-    printf("[Time]: %lf\n", time_end - time_start);
+//    time_end = omp_get_wtime();
+//    printf("[Node %d Time]: %lf\n", id, time_end - time_start);
 }
 

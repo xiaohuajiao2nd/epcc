@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <mpi.h>
+#include <omp.h>
+#include <time.h>
 #include "hash_table.h"
 #include "types.h"
 #include "crack.h"
 
 
+//#define HMPI
 
 
 uint64_t DST_VALUE;
@@ -15,14 +18,14 @@ int HALF_INPUT_LEN;
 
 int64_t BYTES_SUM; 
 
+#ifndef HMPI
 void crack_range(int64_t *start, int64_t *end)
 {
-/*
-    *start = dict[0] * HALF_INPUT_LEN;
-    *end = BYTES_SUM - (dict[0] * (INPUT_LEN - HALF_INPUT_LEN));
-    printf("%lld, %lld\n", *start, *end);
-*/
+    *start = '0' * HALF_INPUT_LEN;
+    *end = BYTES_SUM - ('0' * (INPUT_LEN - HALF_INPUT_LEN));
+    //printf("%lld, %lld\n", *start, *end);
 }
+#endif
 
 /*
 void update_constant(unsigned char *buf)
@@ -40,17 +43,20 @@ void update_constant(unsigned char *buf)
 
 void update_constant(char *argv[])
 {
-	sscanf(argv[1], "%d", &DST_VALUE);
+	sscanf(argv[1], "%llx", &DST_VALUE);
 	sscanf(argv[2], "%d", &BYTES_SUM);
 	sscanf(argv[3], "%d", &INPUT_LEN);
 
 	HALF_INPUT_LEN = INPUT_LEN / 2;
+	//printf("dst_value: %llx\n", DST_VALUE);
 }
 
 int main(int argc, char *argv[])
 {
-	int id, num;
+	int num;
+	int id = -1;
 	int64_t crack_start, crack_end;
+	double time_start, time_end;
 
 	if (argc < 4)
 	{
@@ -58,16 +64,44 @@ int main(int argc, char *argv[])
 	}
 	update_constant(argv);
 	
+//	printf("ID1: %d\n", id);
+
+#ifdef HMPI
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &id);
 	MPI_Comm_size(MPI_COMM_WORLD, &num);
-	
+	time_start = MPI_Wtime();
 	crack_range(id, num, &crack_start, &crack_end);
-	crack(crack_start, crack_end);
+	printf("Define HMPI\n");
 
-	printf("Node %d is done\n", id);
+#else
+
+#ifdef HOMP
+	printf("Define HOMP\n");
+	time_start = omp_get_wtime();
+#else
+	printf("No def\n");
+	time_start = time(NULL);
+#endif
+	crack_range(&crack_start, &crack_end);
+#endif
+	
+	//printf("ID2: %d\n", id);
+	crack(id, crack_start, crack_end);
+
 	fflush(stdout);
+#ifdef HMPI
+	time_end = MPI_Wtime();
 	MPI_Finalize();
+#else
+#ifdef HOMP
+	time_end = omp_get_wtime();
+#else
+	time_end = time(NULL);
+#endif
+#endif
+
+	printf("[Node %d ]Time: %lf\n", id, time_end - time_start);
 	return 0;
 }
 

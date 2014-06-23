@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-void crack(int64_t start, int64_t end);
+void crack(int id, int64_t start, int64_t end);
 
 void crack_range(int id, int node_num, int64_t *start, int64_t *end);
 

@@ -4,4 +4,7 @@
 typedef unsigned long long uint64_t;
 typedef long long int64_t;
 
+//#define HMPI
+//#define HOMP
+
 #endif
