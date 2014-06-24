@@ -28,5 +28,5 @@ esac
 g++ rarara.cpp -o standard_crc
 #./standard_crc $str | xargs mpirun -np 10 -loadbalance -hostfile hostfile ./mycrack
 #./standard_crc $str | xargs ./mycrack
-python test1.py $1 $2
+python test1.py $1 $2 $3 $4
 

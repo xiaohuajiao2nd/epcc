@@ -9,9 +9,8 @@ import timer
 
 
 NODES = 14
-ROUNDS = 1000
-LENGTH = 5
-
+ROUNDS = 100
+LENGTH = 7
 
 def get_crc_args(rstr):
 	cmd = ["./standard_crc", rstr]
@@ -66,21 +65,41 @@ def main(argv):
 		data = [i.rstrip('\n') for i in tmp]
 		return data
 
+	def trans_op(op, length):
+		s = str(length) + "_"
+		if op == 0:
+			s += "none"
+		elif op == 1:
+			s += "mpi"
+		elif op == 2:
+			s += "omp"
+		elif op == 3:
+			s += "omp_mpi"
+		else:
+			s += ""
+		return s + "_"
+
 	if len(argv) > 1:
 		data = []
 		if len(argv) > 2:
 			data = read_data(argv[2])
 		else:
 			data = read_data()
+		
+		if len(argv) > 3:
+			ROUNDS = int(argv[3])
+		if len(argv) > 4:
+			LENGTH = int(argv[4])
 
 		result = []
 
-		f = open("log/" + time.strftime("%H_%M_%S", time.localtime(time.time())) + ".log", "w")
+		f = open("log/" + trans_op(int(argv[1]), LENGTH) + time.strftime("%H_%M_%S", time.localtime(time.time())) + ".log", "w")
 		for i in xrange(ROUNDS):
 			with timer.Timer() as t:
 				round(int(argv[1]), data[i])
 			print "round %d: %s" % (i, t.secs)
 			f.write("round %d: %s - %s\n" % (i, data[i], t.secs))
+			f.flush()
 			
 			result.append(t.secs)
 
@@ -88,7 +107,7 @@ def main(argv):
 		f.write("Average: %s\n" % (sum(result) / len(result)))
 		f.close()
 
+#python test1.py op inputfile round length
 
 if __name__ == "__main__":
 	main(sys.argv)
-	#gen_rstr_data(ROUNDS, LENGTH)
