@@ -1,15 +1,22 @@
 #include "crc64.h"
 #include <stdio.h>
 #include <string.h>
-#include <mpi.h>
-#include <omp.h>
 #include <time.h>
+
+#include "options.h"
 #include "hash_table.h"
 #include "types.h"
 #include "crack.h"
 
 
-//#define HMPI
+#ifdef HMPI
+#include <mpi.h>
+#endif
+
+#ifdef HOMP
+#include <omp.h>
+#endif
+
 
 
 uint64_t DST_VALUE;
@@ -26,20 +33,6 @@ void crack_range(int64_t *start, int64_t *end)
     //printf("%lld, %lld\n", *start, *end);
 }
 #endif
-
-/*
-void update_constant(unsigned char *buf)
-{
-    INPUT_LEN = strlen((char *)buf);
-    HALF_INPUT_LEN = INPUT_LEN / 2;
-
-    BYTES_SUM = 0;
-    for (size_t i = 0; i < INPUT_LEN; i++)
-    {
-        BYTES_SUM += buf[i];
-    }
-}
-*/
 
 void update_constant(char *argv[])
 {
@@ -64,7 +57,6 @@ int main(int argc, char *argv[])
 	}
 	update_constant(argv);
 	
-//	printf("ID1: %d\n", id);
 
 #ifdef HMPI
 	MPI_Init(&argc, &argv);
@@ -86,7 +78,6 @@ int main(int argc, char *argv[])
 	crack_range(&crack_start, &crack_end);
 #endif
 	
-	//printf("ID2: %d\n", id);
 	crack(id, crack_start, crack_end);
 
 	fflush(stdout);

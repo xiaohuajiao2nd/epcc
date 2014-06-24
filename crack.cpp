@@ -1,10 +1,18 @@
 #include <string.h>
-#include <omp.h>
-#include <mpi.h>
 
 #include "crack.h"
 #include "hash_table.h"
 #include "crc64.h"
+#include "options.h"
+
+
+#ifdef HOMP
+#include <omp.h>
+#endif
+
+#ifdef HMPI
+#include <mpi.h>
+#endif
 
 
 
@@ -13,7 +21,7 @@ const int RET_NO_FOUND = 0;
 const int RET_FOUND = 1;
 
 const int DICT_SIZE = 62;
- const unsigned char dict[63] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const unsigned char dict[63] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 uint64_t lookup_table[256] = {0};
 
@@ -219,16 +227,13 @@ void crack_range(int id, int node_num, int64_t *start, int64_t *end)
 void crack(int id, int64_t start, int64_t end)
 {
     int ret;
-    //double time_start, time_end;
     bool found = false;
 	int64_t i;
 
-    //time_start = omp_get_wtime();
 
     init_crc64_table();
     init_lookup_table();
 
-    omp_set_dynamic(0);
 
     memset(key, 0, sizeof key);
 
@@ -236,6 +241,7 @@ void crack(int id, int64_t start, int64_t end)
     
 	//printf("[Node %d start-end] %lld ~ %lld\n", id, start, end);
 #ifdef HOMP
+    omp_set_dynamic(0);
 #pragma omp parallel
 #endif
     {
@@ -274,7 +280,5 @@ void crack(int id, int64_t start, int64_t end)
         clear();
     }
     */
-//    time_end = omp_get_wtime();
-//    printf("[Node %d Time]: %lf\n", id, time_end - time_start);
 }
 

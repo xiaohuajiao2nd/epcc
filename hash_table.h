@@ -49,7 +49,7 @@ inline void add_element(uint64_t e, unsigned char *buf)
 {
     uint64_t index = e & MASK;
     Node *p = crc_list[index];
-    int tid = omp_get_thread_num();
+//    int tid = omp_get_thread_num();
 
     if (!p)
     {
