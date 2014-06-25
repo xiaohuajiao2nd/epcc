@@ -17,19 +17,7 @@ def get_crc_args(rstr):
 	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
 	return p.stdout.read().split(' ')
 	
-def cal_time(output):
-	times = {}
-	lines = output.split('\n')
-	print output
-	for i in lines:
-		if "Time" in i:
-			tmp = i.split(' ')
-			id = int(tmp[1])
-			time = float(tmp[3])
-			times[id] = time
-	print times
-
-def round(parallelized, rstr):
+def round(f, index, parallelized, rstr):
 
 	def gen_cmd():
 		cmd = []
@@ -47,15 +35,20 @@ def round(parallelized, rstr):
 
 	cmd = gen_cmd()
 		
-	p = subprocess.Popen(cmd, stdin=subprocess.PIPE,\
+	with timer.Timer() as t:
+		p = subprocess.Popen(cmd, stdin=subprocess.PIPE,\
 			 stdout=subprocess.PIPE, 
 			stderr=subprocess.PIPE, shell=False)
-	output = p.stdout.read()
-	p.wait()
-	#cal_time(output)
+		output = p.stdout.read()
+		p.wait()
 
 	#print "'%s'" % ' '.join(cmd), "Done"
-	return 
+
+	print "round %d: %s" % (index, t.secs)
+	f.write("round %d: %s - %s\n" % (index, rstr, t.secs))
+	f.flush()
+
+	return t.secs
 
 def main(argv):
 	def read_data(datafile="data.txt"):
@@ -95,13 +88,7 @@ def main(argv):
 
 		f = open("log/" + trans_op(int(argv[1]), LENGTH) + time.strftime("%H_%M_%S", time.localtime(time.time())) + ".log", "w")
 		for i in xrange(ROUNDS):
-			with timer.Timer() as t:
-				round(int(argv[1]), data[i])
-			print "round %d: %s" % (i, t.secs)
-			f.write("round %d: %s - %s\n" % (i, data[i], t.secs))
-			f.flush()
-			
-			result.append(t.secs)
+			result.append(round(f, i, int(argv[1]), data[i]))
 
 		print "Average: " , sum(result) / len(result)
 		f.write("Average: %s\n" % (sum(result) / len(result)))
