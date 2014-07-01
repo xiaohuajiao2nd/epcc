@@ -22,6 +22,8 @@
 uint64_t DST_VALUE;
 int INPUT_LEN;
 int HALF_INPUT_LEN;
+int FORWARD_DST;
+int BACKWARD_DST;
 
 int64_t BYTES_SUM; 
 
@@ -41,6 +43,10 @@ void update_constant(char *argv[])
 	sscanf(argv[3], "%d", &INPUT_LEN);
 
 	HALF_INPUT_LEN = INPUT_LEN / 2;
+
+	FORWARD_DST = INPUT_LEN / 2;
+    	BACKWARD_DST = (INPUT_LEN - HALF_INPUT_LEN - 1 - (INPUT_LEN & 1));
+
 	//printf("dst_value: %llx\n", DST_VALUE);
 }
 

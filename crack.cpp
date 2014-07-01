@@ -20,6 +20,9 @@ const int RET_SUM_OUT = -1;
 const int RET_NO_FOUND = 0;
 const int RET_FOUND = 1;
 
+const int RET_CONTINUE = 1;
+const int RET_BREAK = 2;
+
 const int DICT_SIZE = 62;
 const unsigned char dict[63] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -33,7 +36,8 @@ unsigned char key[14];
 extern uint64_t DST_VALUE;
 extern uint64_t HALF_DEPTH;
 extern int INPUT_LEN;
-extern int HALF_INPUT_LEN;
+extern int FORWARD_DST;
+extern int BACKWARD_DST;
 extern int64_t BYTES_SUM;
 
 /***************************
@@ -81,6 +85,11 @@ inline uint64_t reverse_alg(uint64_t value, char ch)
             | ((ch ^ index) & 0xff);
 }
 
+inline int need_continue(int sum, int rest_depth)
+{
+	return (sum < 0 ||((sum - rest_depth * dict[0]) < 0)) ? RET_BREAK: RET_CONTINUE;
+}
+
 /****************************************
  * Do DFS in forward direction and stop at the half length of result string.
  * Keep the middle result in the hash table so that we can check whether the result
@@ -95,7 +104,7 @@ int forward_dfs(int depth, int64_t sum, uint64_t value)
 
     // Arrive the end of forward searching.
     // 到达正向搜索终点深度
-    if (depth == HALF_INPUT_LEN)
+    if (depth == FORWARD_DST)//HALF_INPUT_LEN)
     {
         //printf("%016llx\n", value);
 
@@ -123,7 +132,7 @@ int forward_dfs(int depth, int64_t sum, uint64_t value)
         //If sum is 0 now, we need not continue the searching in this depth, just return.
         //若用于下一步的sum已经减小至0以下，则没必要把当前这一层的搜索继续下去
         //直接返回
-        if (tmp_sum < 0)
+        if (need_continue(tmp_sum, FORWARD_DST - depth - 1) == RET_BREAK)
             return RET_NO_FOUND;
 
         //Continue to deeper search.
@@ -149,7 +158,7 @@ int reverse_dfs(int depth, int64_t sum, uint64_t value)
     int64_t index;
     int64_t tmp_sum;
 
-    if (depth == (INPUT_LEN - HALF_INPUT_LEN - 1 - (INPUT_LEN & 1)))
+    if (depth == BACKWARD_DST)//(INPUT_LEN - HALF_INPUT_LEN - 1 - (INPUT_LEN & 1)))
     {
         //printf("%016llx\n", value);
         if (sum == 0 && (index = check_value(value)) >= 0)
@@ -161,7 +170,7 @@ int reverse_dfs(int depth, int64_t sum, uint64_t value)
 
             printf("Get it: %s%s\n", buf, (unsigned char *)(key + HALF_INPUT_LEN));
 
-            FILE *f = fopen("result.txt", "w");
+            FILE *f = fopen("result.txt", "a");
             fprintf(f, "Get it: %s%s\n", buf, (unsigned char *)(key + HALF_INPUT_LEN));
             fclose(f);
             //printf("%s", buf);
@@ -184,7 +193,7 @@ int reverse_dfs(int depth, int64_t sum, uint64_t value)
         printf("- %016llx\n", tmp_value);
         */
 
-        if (tmp_sum < 0)
+        if (need_continue(tmp_sum, depth - BACKWARD_DST - 1) == RET_BREAK)
         {
             return RET_NO_FOUND;
         }
@@ -196,19 +205,6 @@ int reverse_dfs(int depth, int64_t sum, uint64_t value)
     return RET_NO_FOUND;
 }
 
-/*
-void update_constant(unsigned char *buf)
-{
-    INPUT_LEN = strlen((char *)buf);
-    HALF_INPUT_LEN = INPUT_LEN / 2;
-
-    BYTES_SUM = 0;
-    for (size_t i = 0; i < INPUT_LEN; i++)
-    {
-        BYTES_SUM += buf[i];
-    }
-}
-*/
 
 void crack_range(int id, int node_num, int64_t *start, int64_t *end)
 {
@@ -229,7 +225,6 @@ void crack(int id, int64_t start, int64_t end)
     int ret;
     bool found = false;
 	int64_t i;
-
 
     init_crc64_table();
     init_lookup_table();

@@ -8,7 +8,7 @@ import time
 import timer
 
 
-NODES = 14
+NODES = 13
 ROUNDS = 100
 LENGTH = 7
 
@@ -36,9 +36,7 @@ def round(f, index, parallelized, rstr):
 	cmd = gen_cmd()
 		
 	with timer.Timer() as t:
-		p = subprocess.Popen(cmd, stdin=subprocess.PIPE,\
-			 stdout=subprocess.PIPE, 
-			stderr=subprocess.PIPE, shell=False)
+		p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
 		output = p.stdout.read()
 		p.wait()
 

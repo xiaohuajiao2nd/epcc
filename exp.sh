@@ -1,7 +1,7 @@
 #!/bin/sh
 
-rounds=100
-for ((len=9;len<=10;len++))
+rounds=10
+for ((len=9;len<=9;len++))
 do
 	if [ -f "data_${len}.txt" ]; then
 		echo "data_${len}.txt exists"
