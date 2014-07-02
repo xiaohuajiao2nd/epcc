@@ -16,7 +16,7 @@ do
 		echo "create data_${len}.txt"
 		python gen_data.py $rounds $len
 	fi
-	for ((op=3;op>0;op--))
+	for ((op=3;op>=0;op--))
 	do
 		./exp1.sh $op data_${len}.txt $rounds $len
 		#echo $op
