@@ -1,0 +1,8 @@
+run `./run.sh`
+Defaultly, we set the unknown string length to 4. Then we use 4 different compiling modes, i.e., OMP+MPI, OMP, MPI and No-parallelization to test the program and record running time log in './log/' directory.
+
+To run `./exp1.sh arg1 arg2 arg3 arg4`, one needs to provide 4 arguments.
+arg1: compiling mode.   arg2: data file name.  arg3: rounds.   arg4: string length
+
+`test1.py` is similar to `exp1.sh`
+
