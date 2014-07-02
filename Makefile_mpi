@@ -1,17 +1,17 @@
 mycrack: main.o crack.o crc64.o hash_table.o
-	mpic++ -o mycrack main.o crack.o crc64.o hash_table.o
+	mpic++ -O3 -o mycrack main.o crack.o crc64.o hash_table.o
 
 main.o: main.cpp crc64.h hash_table.h types.h crack.h options.h
-	mpic++ -c main.cpp
+	mpic++ -O3 -c main.cpp
 
 crack.o: crack.cpp crack.h hash_table.h crc64.h options.h
-	mpic++ -c crack.cpp
+	mpic++ -O3 -c crack.cpp
 
 hash_table.o: hash_table.cpp hash_table.h
-	mpic++ -c hash_table.cpp
+	mpic++ -O3 -c hash_table.cpp
 
 crc64.o: crc64.cpp crc64.h
-	mpic++ -c crc64.cpp
+	mpic++ -O3 -c crc64.cpp
 
 clean:
 	rm mycrack *.o

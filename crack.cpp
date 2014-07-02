@@ -123,17 +123,11 @@ int forward_dfs(int depth, int64_t sum, uint64_t value)
         tmp_sum = sum - dict[i];
         key[depth] = dict[i];
 
-        /*
-        for (int j = 0; j < depth; j++)
-            printf("\t");
-        printf("%c - %lld\n", dict[i], tmp_sum);
-        */
-
         //If sum is 0 now, we need not continue the searching in this depth, just return.
         //若用于下一步的sum已经减小至0以下，则没必要把当前这一层的搜索继续下去
         //直接返回
-        if (need_continue(tmp_sum, FORWARD_DST - depth - 1) == RET_BREAK)
-            return RET_NO_FOUND;
+	if (tmp_sum < 0 ||((tmp_sum - (FORWARD_DST - depth - 1) * dict[0]) < 0))
+		return RET_NO_FOUND;
 
         //Continue to deeper search.
         //深度+1，sum减去当前枚举的值，继续往下一层搜索
@@ -193,10 +187,8 @@ int reverse_dfs(int depth, int64_t sum, uint64_t value)
         printf("- %016llx\n", tmp_value);
         */
 
-        if (need_continue(tmp_sum, depth - BACKWARD_DST - 1) == RET_BREAK)
-        {
-            return RET_NO_FOUND;
-        }
+	if (tmp_sum < 0 ||((tmp_sum - (depth - BACKWARD_DST - 1) * dict[0]) < 0))
+		return RET_NO_FOUND;
 
         if (reverse_dfs(depth - 1, tmp_sum, tmp_value) == RET_FOUND)
             return RET_FOUND;
